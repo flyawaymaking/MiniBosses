@@ -55,41 +55,41 @@ MiniBosses — плагин для Minecraft 1.21.8 (Paper), который до
 ```yaml
 # Автоматический спавн
 auto-spawn:
-enabled: true
-check-interval: 300  # Интервал проверки в секундах
-no-boss-spawn-radius: 100  # Радиус без других боссов
+  enabled: true
+  check-interval: 300  # Интервал проверки в секундах
+  no-boss-spawn-radius: 100  # Радиус без других боссов
 
 # Босс Энда
 ender-boss:
-enabled: true
-spawn-chance: 15.0  # Шанс спавна в процентах
-cooldown: 3600      # Кулдаун в секундах
-health: 300.0       # Здоровье
-ability-chance: 0.3 # Шанс использования способности
+  enabled: true
+  spawn-chance: 15.0  # Шанс спавна в процентах
+  cooldown: 3600      # Кулдаун в секундах
+  health: 300.0       # Здоровье
+  ability-chance: 0.3 # Шанс использования способности
 
 # Босс Ада
 nether-boss:
-enabled: true
-spawn-chance: 15.0
-cooldown: 3600
-health: 320.0
-ability-chance: 0.3
+  enabled: true
+  spawn-chance: 15.0
+  cooldown: 3600
+  health: 320.0
+  ability-chance: 0.3
 
 # Босс Леса
 forest-boss:
-enabled: true
-spawn-chance: 15.0
-cooldown: 3600
-health: 400.0
-ability-chance: 0.3
+  enabled: true
+  spawn-chance: 15.0
+  cooldown: 3600
+  health: 400.0
+  ability-chance: 0.3
 
 # Босс Пустыни
 desert-boss:
-enabled: true
-spawn-chance: 15.0
-cooldown: 3600
-health: 320.0
-ability-chance: 0.3
+  enabled: true
+  spawn-chance: 15.0
+  cooldown: 3600
+  health: 320.0
+  ability-chance: 0.3
 ```
 
 **Полный конфиг:** [config.yml](src/main/resources/config.yml)

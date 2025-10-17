@@ -1,0 +1,134 @@
+# MiniBosses Configuration
+
+# Автоматический спавн
+auto-spawn:
+  enabled: true
+  check-interval: 300  # Интервал проверки в секундах
+  no-boss-spawn-radius: 100  # Радиус без других боссов
+
+# Босс Энда
+ender-boss:
+  enabled: true
+  spawn-chance: 15.0  # Шанс спавна в процентах
+  cooldown: 3600      # Кулдаун в секундах
+  health: 300.0       # Здоровье
+  ability-chance: 0.3 # Шанс использования способности (0.0-1.0)
+
+  # Помощники
+  helper-count: 4           # Количество эндермитов
+  helper-health: 40.0       # Здоровье эндермитов
+
+  # Способности
+  ability-radius: 15        # Радиус способности
+  blindness-duration: 60    # Длительность ослепления (тики)
+  teleport-radius: 12
+
+  # Награды
+  reward-ender-pearls: 8
+  reward-ender-eyes: 2
+  reward-chorus-fruit: 5
+  reward-shulker-shells: 1
+  reward-exp: 150
+
+  # Команды при смерти
+  death-commands:
+    - "console:say Игрок %player% победил Повелителя Энда!"
+    - "console:coins give %player% 5"
+
+# Босс Ада
+nether-boss:
+  enabled: true
+  spawn-chance: 15.0
+  cooldown: 3600
+  health: 320.0
+  ability-chance: 0.3
+
+  # Помощники
+  helper-count: 3           # Количество магма-кубов
+  helper-size: 3            # Размер магма-кубов
+
+  # Способности
+  ability-radius: 10        # Радиус способности
+  fire-duration: 100        # Длительность горения (тики)
+  fire-damage: 5.0          # Урон от огня
+  fireball-radius: 15
+  fireball-power: 1.5
+  teleport-radius: 20       # Радиус поиска игроков для телепортации
+
+  # Награды
+  reward-blaze-rods: 12
+  reward-nether-bricks: 16
+  reward-gold-nuggets: 8
+  reward-exp: 120
+
+  # Команды при смерти
+  death-commands:
+    - "console:say Игрок %player% одолел Инфернального Ифрита!"
+    - "console:coins give %player% 5"
+
+# Босс Леса
+forest-boss:
+  enabled: true
+  spawn-chance: 15.0
+  cooldown: 3600
+  health: 400.0
+  ability-chance: 0.3
+
+  # Помощники
+  helper-count: 5           # Количество волков
+  helper-health: 30.0       # Здоровье волков
+
+  # Способности
+  ability-radius: 12        # Радиус способности
+  slowness-duration: 80     # Длительность замедления (тики)
+  slowness-level: 2         # Уровень замедления
+  weakness-duration: 60     # Длительность слабости (тики)
+  knockback-power: 1.2      # Сила отбрасывания
+  pull-radius: 10
+  pull-power: 1.5
+  pull-weakness-duration: 60
+
+  # Награды
+  reward-iron: 16
+  reward-apples: 8
+  reward-logs: 12
+  reward-exp: 150
+
+  # Команды при смерти
+  death-commands:
+    - "console:say Игрок %player% защитил лес от Защитника!"
+    - "console:coins give %player% 5"
+
+# Босс Пустыни
+desert-boss:
+  enabled: true
+  spawn-chance: 15.0
+  cooldown: 3600
+  health: 320.0
+  ability-chance: 0.3
+
+  # Помощники
+  helper-count: 4           # Количество хасков
+  helper-health: 35.0       # Здоровье хасков
+
+  # Способности
+  ability-radius: 12        # Радиус способности
+  sandstorm-duration: 80    # Длительность песчаной бури (тики)
+  hunger-duration: 100      # Длительность голода (тики)
+  hunger-level: 1           # Уровень голода
+  sandblast-damage: 6.0     # Урон песчаным взрывом
+  arrow-damage: 4.0
+  arrow-slowness-duration: 60
+  arrow-slowness-level: 1
+
+  # Награды
+  reward-gold: 12
+  reward-cactus: 8
+  reward-sandstone: 16
+  reward-rabbit-hide: 6
+  reward-exp: 120
+
+  # Команды при смерти
+  death-commands:
+    - "console:say Игрок %player% пережил песчаную бурю Повелителя Песков!"
+    - "console:coins give %player% 5"

@@ -1,0 +1,21 @@
+name: MiniBosses
+version: 1.0.0
+main: com.flyaway.minibosses.MiniBosses
+api-version: 1.21
+description: Adds custom mini-bosses to the game
+author: FlyAwayMaking
+website: https://github.com/flyawaymaking
+
+commands:
+  minibosses:
+    description: Control the MiniBosses plugin
+    usage: /<command> <reload|spawn>
+    permission: minibosses.admin
+
+permissions:
+  minibosses.admin:
+    description: Admin permissions for MiniBosses
+    default: op
+  minibosses.ignore:
+    description: Ignore spawn MiniBosses for player
+    default: op

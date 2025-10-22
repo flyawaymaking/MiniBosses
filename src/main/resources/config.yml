@@ -6,16 +6,24 @@ auto-spawn:
   check-interval: 300  # Интервал проверки в секундах
   no-boss-spawn-radius: 100  # Радиус без других боссов
 
+# Настройки покупки боссов
+buy-cooldown: 86400000  # 24 часа в миллисекундах
+buy-currency: coins  # Валюта из CoinsEngine для покупки боссов
+
 # Босс Энда
 ender-boss:
   enabled: true
-  spawn-chance: 15.0  # Шанс спавна в процентах
+  spawn-chance: 1.0  # Шанс спавна в процентах
   cooldown: 3600      # Кулдаун в секундах
   health: 300.0       # Здоровье
   ability-chance: 0.3 # Шанс использования способности (0.0-1.0)
 
+  # Покупка
+  buy-enabled: true
+  buy-price: 25000
+
   # Помощники
-  helper-count: 4           # Количество эндермитов
+  helper-count: 10           # Количество эндермитов
   helper-health: 40.0       # Здоровье эндермитов
 
   # Способности
@@ -32,19 +40,22 @@ ender-boss:
 
   # Команды при смерти
   death-commands:
-    - "console:say Игрок %player% победил Повелителя Энда!"
-    - "console:coins give %player% 5"
+    - "console:say §eИгрок §b%player% §eпобедил §dПовелителя Энда!"
 
 # Босс Ада
 nether-boss:
   enabled: true
-  spawn-chance: 15.0
+  spawn-chance: 1.0
   cooldown: 3600
   health: 320.0
   ability-chance: 0.3
 
+  # Покупка
+  buy-enabled: true
+  buy-price: 25000
+
   # Помощники
-  helper-count: 3           # Количество магма-кубов
+  helper-count: 4           # Количество магма-кубов
   helper-size: 3            # Размер магма-кубов
 
   # Способности
@@ -63,19 +74,22 @@ nether-boss:
 
   # Команды при смерти
   death-commands:
-    - "console:say Игрок %player% одолел Инфернального Ифрита!"
-    - "console:coins give %player% 5"
+    - "console:say §eИгрок §b%player% §eодолел §cИнфернального Ифрита!"
 
 # Босс Леса
 forest-boss:
   enabled: true
-  spawn-chance: 15.0
+  spawn-chance: 1.0
   cooldown: 3600
   health: 400.0
   ability-chance: 0.3
 
+  # Покупка
+  buy-enabled: true
+  buy-price: 40000
+
   # Помощники
-  helper-count: 5           # Количество волков
+  helper-count: 6           # Количество волков
   helper-health: 30.0       # Здоровье волков
 
   # Способности
@@ -96,19 +110,22 @@ forest-boss:
 
   # Команды при смерти
   death-commands:
-    - "console:say Игрок %player% защитил лес от Защитника!"
-    - "console:coins give %player% 5"
+    - "console:say §eИгрок §b%player% §eубил §aЗащитника леса!"
 
 # Босс Пустыни
 desert-boss:
   enabled: true
-  spawn-chance: 15.0
+  spawn-chance: 1.0
   cooldown: 3600
   health: 320.0
   ability-chance: 0.3
 
+  # Покупка
+  buy-enabled: true
+  buy-price: 25000
+
   # Помощники
-  helper-count: 4           # Количество хасков
+  helper-count: 5           # Количество хасков
   helper-health: 35.0       # Здоровье хасков
 
   # Способности
@@ -130,5 +147,4 @@ desert-boss:
 
   # Команды при смерти
   death-commands:
-    - "console:say Игрок %player% пережил песчаную бурю Повелителя Песков!"
-    - "console:coins give %player% 5"
+    - "console:say §eИгрок §b%player% §eпережил песчаную бурю §6Повелителя Песков!"

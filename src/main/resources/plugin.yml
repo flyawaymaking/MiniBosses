@@ -1,6 +1,6 @@
-name: MiniBosses
-version: 1.0.0
-main: com.flyaway.minibosses.MiniBosses
+name: ${name}
+main: ${group}.MiniBosses
+version: ${version}
 api-version: 1.21
 description: Adds custom mini-bosses to the game
 author: FlyAwayMaking
@@ -9,13 +9,58 @@ website: https://github.com/flyawaymaking
 commands:
   minibosses:
     description: Control the MiniBosses plugin
-    usage: /<command> <reload|spawn>
-    permission: minibosses.admin
+    usage: /<command> <reload|spawn|cleanup|stats|buy>
+    permission: minibosses.use
 
 permissions:
   minibosses.admin:
-    description: Admin permissions for MiniBosses
+    description: Full access to MiniBosses commands
     default: op
+    children:
+      minibosses.spawn: true
+      minibosses.reload: true
+      minibosses.cleanup: true
+      minibosses.stats: true
+      minibosses.buy: true
+      minibosses.use: true
+
+  minibosses.buy:
+    description: Buy mini-bosses
+    default: op
+
+  minibosses.use:
+    description: Доступ к команде minibosses
+    default: op
+
+  minibosses.spawn:
+    description: Spawn mini-bosses
+    default: op
+
+  minibosses.reload:
+    description: Reload plugin configuration
+    default: op
+
+  minibosses.cleanup:
+    description: Clean up all active bosses
+    default: op
+
+  minibosses.stats:
+    description: View plugin statistics
+    default: op
+
   minibosses.ignore:
-    description: Ignore spawn MiniBosses for player
+    description: Ignore auto-spawn of mini-bosses
     default: op
+
+  minibosses.*:
+    description: All MiniBosses permissions
+    default: op
+    children:
+      minibosses.admin: true
+      minibosses.spawn: true
+      minibosses.reload: true
+      minibosses.cleanup: true
+      minibosses.stats: true
+      minibosses.ignore: true
+      minibosses.buy: true
+      minibosses.use: true

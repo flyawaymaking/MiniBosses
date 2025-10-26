@@ -8,7 +8,7 @@ auto-spawn:
 
 # Настройки покупки боссов
 buy-cooldown: 86400000  # 24 часа в миллисекундах
-buy-currency: coins  # Валюта из CoinsEngine для покупки боссов
+buy-currency: money  # Валюта из CoinsEngine для покупки боссов
 
 # Босс Энда
 ender-boss:
@@ -16,7 +16,7 @@ ender-boss:
   spawn-chance: 1.0  # Шанс спавна в процентах
   cooldown: 3600      # Кулдаун в секундах
   health: 300.0       # Здоровье
-  ability-chance: 0.3 # Шанс использования способности (0.0-1.0)
+  ability-chance: 0.6 # Шанс использования способности (0.0-1.0)
 
   # Покупка
   buy-enabled: true
@@ -27,9 +27,9 @@ ender-boss:
   helper-health: 40.0       # Здоровье эндермитов
 
   # Способности
-  ability-radius: 15        # Радиус способности
+  ability-radius: 24        # Радиус способности
   blindness-duration: 60    # Длительность ослепления (тики)
-  teleport-radius: 12
+  teleport-radius: 24
 
   # Награды
   reward-ender-pearls: 8
@@ -48,7 +48,7 @@ nether-boss:
   spawn-chance: 1.0
   cooldown: 3600
   health: 320.0
-  ability-chance: 0.3
+  ability-chance: 0.8
 
   # Покупка
   buy-enabled: true
@@ -59,12 +59,12 @@ nether-boss:
   helper-size: 3            # Размер магма-кубов
 
   # Способности
-  ability-radius: 10        # Радиус способности
+  ability-radius: 24        # Радиус способности
   fire-duration: 100        # Длительность горения (тики)
   fire-damage: 5.0          # Урон от огня
-  fireball-radius: 15
+  fireball-radius: 24
   fireball-power: 1.5
-  teleport-radius: 20       # Радиус поиска игроков для телепортации
+  teleport-radius: 60       # Радиус поиска игроков для телепортации
 
   # Награды
   reward-blaze-rods: 12
@@ -82,7 +82,7 @@ forest-boss:
   spawn-chance: 1.0
   cooldown: 3600
   health: 400.0
-  ability-chance: 0.3
+  ability-chance: 0.6
 
   # Покупка
   buy-enabled: true
@@ -93,12 +93,12 @@ forest-boss:
   helper-health: 30.0       # Здоровье волков
 
   # Способности
-  ability-radius: 12        # Радиус способности
+  ability-radius: 24        # Радиус способности
   slowness-duration: 80     # Длительность замедления (тики)
   slowness-level: 2         # Уровень замедления
   weakness-duration: 60     # Длительность слабости (тики)
   knockback-power: 1.2      # Сила отбрасывания
-  pull-radius: 10
+  pull-radius: 24
   pull-power: 1.5
   pull-weakness-duration: 60
 
@@ -118,7 +118,7 @@ desert-boss:
   spawn-chance: 1.0
   cooldown: 3600
   health: 320.0
-  ability-chance: 0.3
+  ability-chance: 0.6
 
   # Покупка
   buy-enabled: true
@@ -129,7 +129,7 @@ desert-boss:
   helper-health: 35.0       # Здоровье хасков
 
   # Способности
-  ability-radius: 12        # Радиус способности
+  ability-radius: 24        # Радиус способности
   sandstorm-duration: 80    # Длительность песчаной бури (тики)
   hunger-duration: 100      # Длительность голода (тики)
   hunger-level: 1           # Уровень голода

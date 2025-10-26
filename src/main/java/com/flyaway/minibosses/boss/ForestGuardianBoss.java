@@ -40,7 +40,10 @@ public class ForestGuardianBoss extends AbstractMiniBoss {
         golem.setCustomNameVisible(true);
         golem.getAttribute(Attribute.MAX_HEALTH).setBaseValue(plugin.getConfigManager().getForestBossHealth());
         golem.setHealth(plugin.getConfigManager().getForestBossHealth());
-        golem.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(25);
+        double attackDamage = golem.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
+        golem.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(attackDamage * 1.2);
+        double moveSpeed = golem.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue();
+        golem.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(moveSpeed * 1.1);
         golem.setRemoveWhenFarAway(false);
 
         golem.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, Integer.MAX_VALUE, 2));

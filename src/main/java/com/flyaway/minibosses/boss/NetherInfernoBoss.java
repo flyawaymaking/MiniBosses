@@ -8,6 +8,11 @@ import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.util.Vector;
 
 import java.util.List;
 
@@ -35,12 +40,13 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
         blaze.setCustomNameVisible(true);
         blaze.getAttribute(Attribute.MAX_HEALTH).setBaseValue(plugin.getConfigManager().getNetherBossHealth());
         blaze.setHealth(plugin.getConfigManager().getNetherBossHealth());
-        blaze.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(12);
-        blaze.setRemoveWhenFarAway(false);
+        double attackDamage = blaze.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
+        blaze.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(attackDamage * 2);
+        double moveSpeed = blaze.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue();
+        blaze.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(moveSpeed * 1.5);
 
         blaze.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
         blaze.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, Integer.MAX_VALUE, 1));
-        blaze.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1));
 
         plugin.markAsBoss(entity, "nether");
     }
@@ -53,9 +59,9 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
     @Override
     public void useSpecialAbility() {
         double abilityRoll = random.nextDouble();
-        if (abilityRoll < 0.4) {
+        if (abilityRoll < 0.3) {
             fireStorm();
-        } else if (abilityRoll < 0.8) {
+        } else if (abilityRoll < 0.7) {
             fireballs();
         } else {
             teleportToPlayer();
@@ -77,21 +83,92 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
         }
     }
 
+    public void attackPlayers(SmallFireball proj) {
+        World world = entity.getWorld();
+
+        // Ускоряем основной фаербол
+        proj.setVelocity(proj.getVelocity().multiply(2.0));
+
+        for (Player player : getNearbyPlayers(plugin.getConfigManager().getNetherFireballRadius())) {
+            Vector toTarget = player.getEyeLocation().toVector()
+                    .subtract(entity.getEyeLocation().toVector())
+                    .normalize();
+
+            // Направление в игрока
+            Location spawnLoc = entity.getEyeLocation().add(toTarget.multiply(0.5));
+            double baseSpeed = 0.6; // скорость фаербола
+
+            int fireballCount = 4;
+            for (int i = 0; i < fireballCount; i++) {
+                int delay = i * 5;
+
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (!entity.isValid() || entity.isDead()) return;
+
+                        Vector spread = toTarget.clone().add(randomSpreadVector(0.08)).normalize();
+
+                        SmallFireball extra = (SmallFireball) world.spawnEntity(spawnLoc, EntityType.SMALL_FIREBALL);
+                        extra.getPersistentDataContainer().set(plugin.getExtraFireballsKey(), PersistentDataType.BYTE, (byte) 1);
+                        extra.setShooter(entity);
+                        extra.setVelocity(spread.multiply(baseSpeed * 2.0));
+                    }
+                }.runTaskLater(plugin, delay);
+            }
+        }
+    }
+
+    private Vector randomSpreadVector(double maxOffset) {
+        double ox = (random.nextDouble() * 2 - 1) * maxOffset;
+        double oy = (random.nextDouble() * 2 - 1) * maxOffset;
+        double oz = (random.nextDouble() * 2 - 1) * maxOffset;
+        return new Vector(ox, oy, oz);
+    }
+
     private void fireballs() {
         Location loc = entity.getLocation();
         World world = loc.getWorld();
 
+        // Звук и эффект выстрела
         world.playSound(loc, Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.7f);
+        world.spawnParticle(Particle.FLAME, loc, 30, 2, 1, 2, 0.1);
+
+        double baseSpeed = 0.8; // базовая скорость полёта
+        double spreadAmount = 0.3; // разброс между снарядами
 
         for (Player player : getNearbyPlayers(plugin.getConfigManager().getNetherFireballRadius())) {
-            Fireball fireball = world.spawn(loc, Fireball.class);
-            fireball.setShooter(entity);
-            fireball.setDirection(player.getLocation().toVector().subtract(loc.toVector()).normalize());
-            fireball.setYield(plugin.getConfigManager().getNetherFireballPower());
-            fireball.setIsIncendiary(true);
-//             player.sendMessage(ChatColor.RED + "Инфернальный Ифрит запускает в вас огненный шар!");
+            Vector baseDir = player.getLocation().toVector().subtract(loc.toVector()).normalize();
+            Vector perpendicular = new Vector(-baseDir.getZ(), 0, baseDir.getX()).normalize();
+
+            Location spawnLoc = loc.clone().add(baseDir.multiply(1.0)); // немного впереди от Ифрита
+
+            // Центральный фаербол
+            Fireball center = world.spawn(spawnLoc, Fireball.class);
+            center.setShooter(entity);
+            center.setDirection(baseDir);
+            center.setVelocity(baseDir.clone().multiply(baseSpeed));
+            center.setYield(plugin.getConfigManager().getNetherFireballPower());
+            center.setIsIncendiary(true);
+
+            // Левый фаербол
+            Fireball left = world.spawn(spawnLoc.clone().add(perpendicular.clone().multiply(spreadAmount)), Fireball.class);
+            left.setShooter(entity);
+            Vector leftVel = baseDir.clone().add(perpendicular.clone().multiply(spreadAmount)).normalize().multiply(baseSpeed);
+            left.setDirection(leftVel);
+            left.setVelocity(leftVel);
+            left.setYield(plugin.getConfigManager().getNetherFireballPower());
+            left.setIsIncendiary(true);
+
+            // Правый фаербол
+            Fireball right = world.spawn(spawnLoc.clone().subtract(perpendicular.clone().multiply(spreadAmount)), Fireball.class);
+            right.setShooter(entity);
+            Vector rightVel = baseDir.clone().subtract(perpendicular.clone().multiply(spreadAmount)).normalize().multiply(baseSpeed);
+            right.setDirection(rightVel);
+            right.setVelocity(rightVel);
+            right.setYield(plugin.getConfigManager().getNetherFireballPower());
+            right.setIsIncendiary(true);
         }
-        world.spawnParticle(Particle.FLAME, loc, 30, 2, 1, 2, 0.1);
     }
 
     private void teleportToPlayer() {
@@ -105,7 +182,7 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
             Player targetPlayer = nearbyPlayers.get(random.nextInt(nearbyPlayers.size()));
             Location targetLoc = targetPlayer.getLocation();
 
-            Location teleportLoc = findSafeTeleportLocation(targetLoc, 3);
+            Location teleportLoc = findSafeTeleportLocation(targetLoc, 10);
             if (teleportLoc != null) {
                 entity.teleport(teleportLoc);
 
@@ -117,6 +194,33 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
                 targetPlayer.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 1));
             }
         }
+    }
+
+    protected Location findSafeTeleportLocation(Location center, int radius) {
+        World world = center.getWorld();
+
+        for (int i = 0; i < 15; i++) {
+            int x = center.getBlockX() + random.nextInt(radius * 2) - radius;
+            int z = center.getBlockZ() + random.nextInt(radius * 2) - radius;
+            int y = center.getBlockY() + random.nextInt(6) - 3; // немного выше/ниже текущей высоты
+
+            Location testLoc = new Location(world, x + 0.5, y, z + 0.5);
+
+            // Проверяем, чтобы место не было внутри блока
+            if (!testLoc.getBlock().isPassable()) continue;
+
+            // Проверяем, чтобы под мобом не было пустоты (но для ифрита можно позволить 1–2 блока)
+            Material below = testLoc.clone().subtract(0, 2, 0).getBlock().getType();
+            if (below == Material.LAVA || below == Material.WATER) continue;
+
+            // Проверяем пространство вокруг
+            if (testLoc.clone().add(0, 1, 0).getBlock().isPassable() &&
+                testLoc.clone().add(0, 2, 0).getBlock().isPassable()) {
+                return testLoc;
+            }
+        }
+
+        return null;
     }
 
     @Override

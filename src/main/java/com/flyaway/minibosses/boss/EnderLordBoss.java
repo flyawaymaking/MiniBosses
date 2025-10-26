@@ -40,7 +40,10 @@ public class EnderLordBoss extends AbstractMiniBoss {
         enderman.setCustomNameVisible(true);
         enderman.getAttribute(Attribute.MAX_HEALTH).setBaseValue(plugin.getConfigManager().getEnderBossHealth());
         enderman.setHealth(plugin.getConfigManager().getEnderBossHealth());
-        enderman.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(15);
+        double attackDamage = enderman.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
+        enderman.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(attackDamage * 2);
+        double moveSpeed = enderman.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue();
+        enderman.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(moveSpeed * 1.2);
         enderman.setRemoveWhenFarAway(false);
 
         enderman.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1));

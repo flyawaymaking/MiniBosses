@@ -40,8 +40,10 @@ public class DesertSandlordBoss extends AbstractMiniBoss {
         husk.setCustomNameVisible(true);
         husk.getAttribute(Attribute.MAX_HEALTH).setBaseValue(plugin.getConfigManager().getDesertBossHealth());
         husk.setHealth(plugin.getConfigManager().getDesertBossHealth());
-        husk.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(18);
-        husk.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.25);
+        double attackDamage = husk.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
+        husk.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(attackDamage * 2);
+        double moveSpeed = husk.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue();
+        husk.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(moveSpeed * 1.1);
         husk.setRemoveWhenFarAway(false);
 
         husk.getEquipment().setHelmet(new ItemStack(Material.GOLDEN_HELMET));
@@ -106,16 +108,28 @@ public class DesertSandlordBoss extends AbstractMiniBoss {
         world.playSound(loc, Sound.ENTITY_SKELETON_SHOOT, 1.0f, 0.8f);
 
         for (Player player : getNearbyPlayers(plugin.getConfigManager().getDesertAbilityRadius())) {
-            Arrow arrow = world.spawnArrow(loc, player.getLocation().toVector(), 1.2f, 12.0f);
+            // Берем направление от босса к глазам игрока
+            Vector direction = player.getEyeLocation().toVector().subtract(loc.toVector()).normalize();
+
+            // Спавним стрелу с нужным направлением
+            Arrow arrow = world.spawnArrow(
+                loc.add(0, 1.5, 0), // немного выше центра босса, чтобы стрела не шла из ног
+                direction,
+                1.6f, // скорость
+                0.0f  // разброс (0 = точное попадание)
+            );
+
             arrow.setShooter(entity);
             arrow.setDamage(plugin.getConfigManager().getDesertArrowDamage());
+
             arrow.addCustomEffect(new PotionEffect(
                 PotionEffectType.SLOWNESS,
                 plugin.getConfigManager().getDesertArrowSlownessDuration(),
                 plugin.getConfigManager().getDesertArrowSlownessLevel()
             ), true);
 
-//             player.sendMessage(ChatColor.YELLOW + "Повелитель Песков выпускает замедляющие стрелы!");
+            // Можно включить зажжение для эффектности:
+            // arrow.setFireTicks(40);
         }
     }
 

@@ -233,25 +233,6 @@ public abstract class AbstractMiniBoss implements MiniBoss {
         }
     }
 
-    protected Location findSafeTeleportLocation(Location center, int radius) {
-        World world = center.getWorld();
-        for (int i = 0; i < 10; i++) {
-            int x = center.getBlockX() + random.nextInt(radius * 2) - radius;
-            int z = center.getBlockZ() + random.nextInt(radius * 2) - radius;
-            int y = world.getHighestBlockYAt(x, z);
-
-            Location testLoc = new Location(world, x + 0.5, y + 1, z + 0.5);
-            Material blockType = testLoc.getBlock().getType();
-            Material blockAbove = testLoc.clone().add(0, 1, 0).getBlock().getType();
-
-            if (blockType != Material.WATER && blockType != Material.LAVA &&
-                blockType.isSolid() && blockAbove.isAir()) {
-                return testLoc;
-            }
-        }
-        return null;
-    }
-
     public void onDeath(Player killer) {
         playDeathEffects();
         executeDeathCommands(killer);

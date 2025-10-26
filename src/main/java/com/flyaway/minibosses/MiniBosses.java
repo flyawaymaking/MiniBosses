@@ -1,5 +1,6 @@
 package com.flyaway.minibosses;
 
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -18,9 +19,11 @@ public class MiniBosses extends JavaPlugin {
 
     // Ключи для Persistent Data
     private final NamespacedKey bossTypeKey;
+    private final NamespacedKey extraFireballsKey;
 
     public MiniBosses() {
         this.bossTypeKey = new NamespacedKey(this, "miniboss_type");
+        this.extraFireballsKey = new NamespacedKey(this, "mini_boss_extra_fireballs");
     }
 
     @Override
@@ -44,6 +47,7 @@ public class MiniBosses extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        Bukkit.getScheduler().cancelTasks(this);
         bossManager.stopAllTasks();
         bossCooldowns.clear();
     }
@@ -99,5 +103,9 @@ public class MiniBosses extends JavaPlugin {
 
     public NamespacedKey getBossTypeKey() {
         return bossTypeKey;
+    }
+
+    public NamespacedKey getExtraFireballsKey() {
+        return extraFireballsKey;
     }
 }

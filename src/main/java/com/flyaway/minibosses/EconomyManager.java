@@ -44,10 +44,6 @@ public class EconomyManager {
         }
     }
 
-    public String getCurrencyName() {
-        return currency != null ? currency.getName() : plugin.getConfigManager().getBuyCurrency();
-    }
-
     public boolean hasEnoughMoney(Player player, double amount) {
         if (!economyEnabled || currency == null) {
             player.sendMessage("§cСистема экономики недоступна!");
@@ -70,24 +66,18 @@ public class EconomyManager {
         }
     }
 
-    public boolean addMoney(Player player, double amount) {
-        if (!economyEnabled || currency == null) {
-            return false;
-        }
+    public void addMoney(Player player, double amount) {
+        if (!economyEnabled || currency == null) return;
 
         try {
             CoinsEngineAPI.addBalance(player, currency, amount);
-            return true;
         } catch (Exception e) {
             plugin.getLogger().warning("Ошибка при начислении средств игроку " + player.getName() + ": " + e.getMessage());
-            return false;
         }
     }
 
     public double getBalance(Player player) {
-        if (!economyEnabled || currency == null) {
-            return 0;
-        }
+        if (!economyEnabled || currency == null) return 0;
 
         try {
             return CoinsEngineAPI.getBalance(player, currency);
@@ -98,14 +88,10 @@ public class EconomyManager {
     }
 
     public boolean removeMoney(Player player, double amount) {
-        if (!economyEnabled || currency == null) {
-            return false;
-        }
+        if (!economyEnabled || currency == null) return false;
 
         // Проверяем, достаточно ли денег перед списанием
-        if (!hasEnoughMoney(player, amount)) {
-            return false;
-        }
+        if (!hasEnoughMoney(player, amount)) return false;
 
         try {
             CoinsEngineAPI.removeBalance(player, currency, amount);
@@ -123,14 +109,6 @@ public class EconomyManager {
 
         DecimalFormat formatter = new DecimalFormat("#,##0.00", symbols);
         return formatter.format(amount) + currency.getSymbol();
-    }
-
-    public String getCurrencySymbol() {
-        return currency != null ? currency.getSymbol() : plugin.getConfigManager().getBuyCurrency();
-    }
-
-    public Currency getCurrency() {
-        return currency;
     }
 
     public boolean isEconomyAvailable() {

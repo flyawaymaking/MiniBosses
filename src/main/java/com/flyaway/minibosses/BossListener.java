@@ -1,14 +1,13 @@
 package com.flyaway.minibosses;
 
 import com.flyaway.minibosses.boss.*;
-import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.World;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractArrow;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Blaze;
@@ -24,6 +23,7 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
+import java.util.Objects;
 import java.util.Random;
 
 public class BossListener implements Listener {
@@ -54,9 +54,7 @@ public class BossListener implements Listener {
     @EventHandler
     public void onBossDamage(EntityDamageEvent event) {
         // Использование способностей
-        if (!(event.getEntity() instanceof LivingEntity)) return;
-
-        LivingEntity entity = (LivingEntity) event.getEntity();
+        if (!(event.getEntity() instanceof LivingEntity entity)) return;
 
         if (!plugin.isBoss(entity)) return;
 
@@ -67,7 +65,7 @@ public class BossListener implements Listener {
 
         // Получаем текущее здоровье после урона
         double newHealth = entity.getHealth() - event.getFinalDamage();
-        double maxHealth = entity.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+        double maxHealth = Objects.requireNonNull(entity.getAttribute(Attribute.MAX_HEALTH)).getValue();
         double healthPercent = Math.max(0, newHealth) / maxHealth;
 
         // Проверяем призыв помощников
@@ -85,7 +83,6 @@ public class BossListener implements Listener {
     public void onProjectileHit(ProjectileHitEvent event) {
         Projectile projectile = event.getEntity();
 
-        // Проверяем, что это стрела
         if (projectile instanceof Arrow arrow) {
             // Отражение стрел в игроков
             // Проверяем, что стрелу выпустил игрок
@@ -95,8 +92,8 @@ public class BossListener implements Listener {
             if (!(event.getHitEntity() instanceof LivingEntity entity)) return;
             if (!plugin.isBoss(entity)) return;
 
-            // 50% вероятность отражения
-            if (random.nextBoolean()) {
+            // вероятность отражения
+            if (random.nextDouble() < plugin.getConfigManager().getArrowReflectionChance()) {
                 reflectArrow(arrow, shooter, entity);
             }
         } else if (projectile instanceof SmallFireball fireball) {
@@ -128,10 +125,10 @@ public class BossListener implements Listener {
 
         // Спавним новую стрелу
         Arrow newArrow = world.spawnArrow(
-            hitLoc.add(0, 0.2, 0), // чуть выше, чтобы не в землю
-            direction,
-            1.6f, // скорость
-            0.0f  // разброс
+                hitLoc.add(0, 0.2, 0), // чуть выше, чтобы не в землю
+                direction,
+                1.6f, // скорость
+                0.0f  // разброс
         );
 
         newArrow.setShooter(boss);
@@ -164,21 +161,12 @@ public class BossListener implements Listener {
     }
 
     private MiniBoss createBossInstance(String bossType, LivingEntity entity) {
-        switch (bossType) {
-            case "ender":
-                EnderLordBoss enderBoss = new EnderLordBoss(plugin, entity);
-                return enderBoss;
-            case "nether":
-                NetherInfernoBoss netherBoss = new NetherInfernoBoss(plugin, entity);
-                return netherBoss;
-            case "forest":
-                ForestGuardianBoss forestBoss = new ForestGuardianBoss(plugin, entity);
-                return forestBoss;
-            case "desert":
-                DesertSandlordBoss desertBoss = new DesertSandlordBoss(plugin, entity);
-                return desertBoss;
-            default:
-                return null;
-        }
+        return switch (bossType) {
+            case "ender" -> new EnderLordBoss(plugin, entity);
+            case "nether" -> new NetherInfernoBoss(plugin, entity);
+            case "forest" -> new ForestGuardianBoss(plugin, entity);
+            case "desert" -> new DesertSandlordBoss(plugin, entity);
+            default -> null;
+        };
     }
 }

@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
+import java.util.Arrays;
 
 public class PlayerDataManager {
     private final MiniBosses plugin;
@@ -41,10 +41,10 @@ public class PlayerDataManager {
 
         // Сохраняем файл с комментариями при первом создании
         if (playerData.getKeys(false).isEmpty()) {
-            playerData.options().header(
-                "Данные игроков для покупки боссов\n" +
-                "Не редактируйте вручную!\n" +
-                "Формат: UUID_игрока.last_buy_time: timestamp"
+            playerData.options().setHeader(Arrays.asList(
+                    "Данные игроков для покупки боссов",
+                    "Не редактируйте вручную!",
+                    "Формат: UUID_игрока.last_buy_time: timestamp")
             );
             savePlayerData();
         }

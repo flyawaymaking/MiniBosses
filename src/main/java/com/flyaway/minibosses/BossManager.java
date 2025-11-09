@@ -10,7 +10,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class BossManager {
@@ -21,11 +20,8 @@ public class BossManager {
     private static boolean wgInitialized = false;
     private static boolean wgAvailable = false;
 
-    // Кэшированные классы и методы WorldGuard
-    private static Class<?> wgClass, bukkitAdapterClass, flagsClass, regionAssociableClass, flagClass, stateEnumClass;
     private static Method getInstanceMethod, getPlatformMethod, getRegionContainerMethod, createQueryMethod,
-            adaptMethod, getApplicableRegionsMethod, queryValueMethod;
-    private static Field mobSpawningFlagField;
+            adaptMethod, getApplicableRegionsMethod;
     private static Object denyStateValue;
 
     public BossManager(MiniBosses plugin) {
@@ -37,12 +33,9 @@ public class BossManager {
         wgInitialized = true;
 
         try {
-            wgClass = Class.forName("com.sk89q.worldguard.WorldGuard");
-            bukkitAdapterClass = Class.forName("com.sk89q.worldedit.bukkit.BukkitAdapter");
-            flagsClass = Class.forName("com.sk89q.worldguard.protection.flags.Flags");
-            regionAssociableClass = Class.forName("com.sk89q.worldguard.protection.association.RegionAssociable");
-            flagClass = Class.forName("com.sk89q.worldguard.protection.flags.Flag");
-            stateEnumClass = Class.forName("com.sk89q.worldguard.protection.flags.StateFlag$State");
+            // Кэшированные классы и методы WorldGuard
+            Class<?> wgClass = Class.forName("com.sk89q.worldguard.WorldGuard");
+            Class<?> bukkitAdapterClass = Class.forName("com.sk89q.worldedit.bukkit.BukkitAdapter");
 
             getInstanceMethod = wgClass.getMethod("getInstance");
             getPlatformMethod = wgClass.getMethod("getPlatform");
@@ -50,20 +43,9 @@ public class BossManager {
             createQueryMethod = getRegionContainerMethod.getReturnType().getMethod("createQuery");
             adaptMethod = bukkitAdapterClass.getMethod("adapt", Location.class);
 
-            // Для получения applicable regions
             Class<?> regionQueryClass = createQueryMethod.getReturnType();
             Class<?> weLocationClass = adaptMethod.getReturnType();
             getApplicableRegionsMethod = regionQueryClass.getMethod("getApplicableRegions", weLocationClass);
-
-            // Для проверки флага MOB_SPAWNING
-            mobSpawningFlagField = flagsClass.getField("MOB_SPAWNING");
-
-            // Для вызова queryValue
-            Class<?> regionResultSetClass = getApplicableRegionsMethod.getReturnType();
-            queryValueMethod = regionResultSetClass.getMethod("queryValue", regionAssociableClass, flagClass);
-
-            // Значение StateFlag.State.DENY
-            denyStateValue = Enum.valueOf((Class<Enum>) stateEnumClass.asSubclass(Enum.class), "DENY");
 
             wgAvailable = true;
 
@@ -73,19 +55,10 @@ public class BossManager {
         }
     }
 
-    // Методы спавна боссов
-    public void spawnEnderLord(Location location) {
-        spawnEnderLord(location, true);
-    }
-
     public void spawnEnderLord(Location location, boolean needSetCooldown) {
         new EnderLordBoss(plugin, location);
         if (needSetCooldown) plugin.getBossCooldowns().put("ender", System.currentTimeMillis());
         plugin.getLogger().info("Создан Повелитель Энда в " + location);
-    }
-
-    public void spawnNetherInferno(Location location) {
-        spawnNetherInferno(location, true);
     }
 
     public void spawnNetherInferno(Location location, boolean needSetCooldown) {
@@ -94,18 +67,10 @@ public class BossManager {
         plugin.getLogger().info("Создан Инфернальный Ифрит в " + location);
     }
 
-    public void spawnForestGuardian(Location location) {
-        spawnForestGuardian(location, true);
-    }
-
     public void spawnForestGuardian(Location location, boolean needSetCooldown) {
         new ForestGuardianBoss(plugin, location);
         if (needSetCooldown) plugin.getBossCooldowns().put("forest", System.currentTimeMillis());
         plugin.getLogger().info("Создан Защитник Леса в " + location);
-    }
-
-    public void spawnDesertSandlord(Location location) {
-        spawnDesertSandlord(location, true);
     }
 
     public void spawnDesertSandlord(Location location, boolean needSetCooldown) {
@@ -114,81 +79,67 @@ public class BossManager {
         plugin.getLogger().info("Создан Повелитель Песков в " + location);
     }
 
-    // Умный спавн с проверкой условий
-    public boolean trySpawnBossNearPlayer(Player player, String bossType) {
+    public void trySpawnBossNearPlayer(Player player, String bossType) {
         Location playerLoc = player.getLocation();
 
-        if (player.hasPermission("minibosses.ignore")) {
-            return false;
-        }
+        if (player.hasPermission("minibosses.ignore")) return;
 
-        if (isInsideProtectedRegion(playerLoc)) {
-            return false;
-        }
+        if (isInsideProtectedRegion(playerLoc)) return;
 
-        if (hasActiveBossNearby(playerLoc)) {
-            return false;
-        }
+        if (hasActiveBossNearby(playerLoc)) return;
 
-        if (!isCooldownExpired(bossType)) {
-            return false;
-        }
+        if (!isCooldownExpired(bossType)) return;
 
         Location spawnLocation = findSpawnLocation(playerLoc);
-        if (spawnLocation == null) {
-            return false;
-        }
+        if (spawnLocation == null) return;
 
         switch (bossType.toLowerCase()) {
             case "ender":
                 if (canSpawnEnderBoss(playerLoc)) {
                     if (!plugin.getConfigManager().isEnderBossEnabled()) {
                         plugin.getLogger().warning("Попытка спавна отключенного босса Энда");
-                        return false;
+                        return;
                     }
-                    spawnEnderLord(spawnLocation);
-                    return true;
+                    spawnEnderLord(spawnLocation, true);
+                    return;
                 }
                 break;
             case "nether":
                 if (canSpawnNetherBoss(playerLoc)) {
                     if (!plugin.getConfigManager().isNetherBossEnabled()) {
                         plugin.getLogger().warning("Попытка спавна отключенного босса Ада");
-                        return false;
+                        return;
                     }
-                    spawnNetherInferno(spawnLocation);
-                    return true;
+                    spawnNetherInferno(spawnLocation, true);
+                    return;
                 }
                 break;
             case "forest":
                 if (canSpawnForestBoss(playerLoc)) {
                     if (!plugin.getConfigManager().isForestBossEnabled()) {
                         plugin.getLogger().warning("Попытка спавна отключенного босса Леса");
-                        return false;
+                        return;
                     }
-                    spawnForestGuardian(spawnLocation);
-                    return true;
+                    spawnForestGuardian(spawnLocation, true);
+                    return;
                 }
                 break;
             case "desert":
                 if (canSpawnDesertBoss(playerLoc)) {
                     if (!plugin.getConfigManager().isDesertBossEnabled()) {
                         plugin.getLogger().warning("Попытка спавна отключенного босса Пустыни");
-                        return false;
+                        return;
                     }
-                    spawnDesertSandlord(spawnLocation);
-                    return true;
+                    spawnDesertSandlord(spawnLocation, true);
+                    return;
                 }
                 break;
         }
-
-        return false;
     }
 
     // Проверки условий спавна
     private boolean canSpawnEnderBoss(Location location) {
-        return location.getWorld().getEnvironment() == World.Environment.THE_END &&
-               canSpawnMobsAtLocation(location);
+        return location.getWorld().getEnvironment() == World.Environment.THE_END && canSpawnMobsAtLocation(location);
     }
 
     private boolean canSpawnNetherBoss(Location location) {
@@ -210,24 +161,24 @@ public class BossManager {
     private boolean isInNetherFortress(Location location) {
         Material blockType = location.getBlock().getType();
         return blockType == Material.NETHER_BRICKS ||
-               blockType == Material.NETHER_BRICK_FENCE ||
-               blockType.toString().contains("NETHER_BRICK");
+                blockType == Material.NETHER_BRICK_FENCE ||
+                blockType.toString().contains("NETHER_BRICK");
     }
 
     private boolean isInForest(Location location) {
         Biome biome = location.getBlock().getBiome();
         return biome.toString().contains("FOREST") ||
-               biome == Biome.TAIGA ||
-               biome == Biome.BIRCH_FOREST ||
-               biome == Biome.DARK_FOREST;
+                biome == Biome.TAIGA ||
+                biome == Biome.BIRCH_FOREST ||
+                biome == Biome.DARK_FOREST;
     }
 
     private boolean isInDesert(Location location) {
         Biome biome = location.getBlock().getBiome();
         return biome == Biome.DESERT ||
-               biome == Biome.BADLANDS ||
-               biome == Biome.ERODED_BADLANDS ||
-               biome == Biome.WOODED_BADLANDS;
+                biome == Biome.BADLANDS ||
+                biome == Biome.ERODED_BADLANDS ||
+                biome == Biome.WOODED_BADLANDS;
     }
 
     private boolean hasActiveBossNearby(Location location) {
@@ -242,47 +193,80 @@ public class BossManager {
         if (lastSpawn == null) return true;
 
         long currentTime = System.currentTimeMillis();
-        long cooldownMs = getCooldownForBoss(bossType) * 1000L;
+        long cooldownMs = plugin.getConfigManager().getCooldownForBoss(bossType) * 1000L;
 
         return (currentTime - lastSpawn) >= cooldownMs;
     }
 
-    private long getCooldownForBoss(String bossType) {
-        switch (bossType) {
-            case "ender": return plugin.getConfigManager().getEnderBossCooldown();
-            case "nether": return plugin.getConfigManager().getNetherBossCooldown();
-            case "forest": return plugin.getConfigManager().getForestBossCooldown();
-            case "desert": return plugin.getConfigManager().getDesertBossCooldown();
-            default: return 300;
-        }
-    }
-
     public Location findSpawnLocation(Location center) {
-        for (int i = 0; i < 10; i++) {
+        World world = center.getWorld();
+        boolean isNether = world.getEnvironment() == World.Environment.NETHER;
+
+        for (int i = 0; i < 20; i++) {
             int x = center.getBlockX() + random.nextInt(30) - 15;
             int z = center.getBlockZ() + random.nextInt(30) - 15;
-            int y = center.getWorld().getHighestBlockYAt(x, z);
+            int y;
 
-            Location testLoc = new Location(center.getWorld(), x + 0.5, y + 1, z + 0.5);
+            if (isNether) {
+                // В аду — ищем уровень вблизи игрока (±5 блоков по Y)
+                y = center.getBlockY() + random.nextInt(11) - 5;
+            } else {
+                // В обычных мирах — верхний безопасный блок
+                y = world.getHighestBlockYAt(x, z);
+            }
+
+            Location testLoc = new Location(world, x + 0.5, y + 1, z + 0.5);
 
             if (canSpawnMobsAtLocation(testLoc)) {
                 return testLoc;
+            }
+
+            // Для ада добавим попытку опустить на землю, если моб «в воздухе»
+            if (isNether) {
+                Location below = findNearestSolidBelow(testLoc);
+                if (below != null && canSpawnMobsAtLocation(below)) {
+                    return below;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private Location findNearestSolidBelow(Location start) {
+        Location loc = start.clone();
+        World world = loc.getWorld();
+
+        for (int i = 0; i < 8; i++) {
+            loc.subtract(0, 1, 0);
+            Block blockBelow = world.getBlockAt(loc.clone().subtract(0, 1, 0));
+            if (blockBelow.getType().isOccluding() && blockBelow.getType().isCollidable()) {
+                // Возвращаем точку прямо над твёрдым блоком
+                return blockBelow.getLocation().add(0.5, 1, 0.5);
             }
         }
         return null;
     }
 
     private boolean canSpawnMobsAtLocation(Location location) {
-        // Базовая проверка безопасности локации
         if (isInsideProtectedRegion(location)) return false;
+
         Block blockBelow = location.clone().subtract(0, 1, 0).getBlock();
         Block blockAt = location.getBlock();
 
-        return blockBelow.getType().isOccluding() &&
-               blockBelow.getType().isCollidable() &&
-               !blockBelow.isLiquid() &&
-               blockAt.isPassable();
+        // Проверяем воздух и отсутствие жидкости/лавы
+        if (!blockAt.isPassable()) return false;
+        if (blockBelow.isLiquid()) return false;
+
+        Material typeBelow = blockBelow.getType();
+
+        return typeBelow.isOccluding() &&
+                typeBelow.isCollidable() &&
+                typeBelow != Material.BEDROCK && // избегаем спавна на потолке ада
+                typeBelow != Material.LAVA &&
+                typeBelow != Material.FIRE;
     }
+
 
     public boolean isInsideProtectedRegion(Location location) {
         if (!isWorldGuardEnabled()) {
@@ -349,33 +333,26 @@ public class BossManager {
         }.runTaskTimer(plugin, 0L, plugin.getConfigManager().getSpawnCheckInterval() * 20L);
     }
 
-    private void tryAutoSpawnForPlayer(Player player) {
-        Location playerLoc = player.getLocation();
+    private void tryAutoSpawnForPlayer(final Player player) {
+        final Location playerLoc = player.getLocation();
+        final String[] bossTypes = {"ender", "nether", "forest", "desert"};
 
-        // Проверяем каждого босса с его шансом
-        if (plugin.getConfigManager().isEnderBossEnabled() &&
-            canSpawnEnderBoss(playerLoc) &&
-            random.nextDouble() * 100 <= plugin.getConfigManager().getEnderBossChance()) {
-            trySpawnBossNearPlayer(player, "ender");
+        for (final String bossType : bossTypes) {
+            if (plugin.getConfigManager().isBossEnabled(bossType) && canSpawnBoss(bossType, playerLoc) &&
+                    random.nextDouble() * 100 <= plugin.getConfigManager().getSpawnChance(bossType)) {
+                trySpawnBossNearPlayer(player, bossType);
+            }
         }
+    }
 
-        if (plugin.getConfigManager().isNetherBossEnabled() &&
-            canSpawnNetherBoss(playerLoc) &&
-            random.nextDouble() * 100 <= plugin.getConfigManager().getNetherBossChance()) {
-            trySpawnBossNearPlayer(player, "nether");
-        }
-
-        if (plugin.getConfigManager().isForestBossEnabled() &&
-            canSpawnForestBoss(playerLoc) &&
-            random.nextDouble() * 100 <= plugin.getConfigManager().getForestBossChance()) {
-            trySpawnBossNearPlayer(player, "forest");
-        }
-
-        if (plugin.getConfigManager().isDesertBossEnabled() &&
-            canSpawnDesertBoss(playerLoc) &&
-            random.nextDouble() * 100 <= plugin.getConfigManager().getDesertBossChance()) {
-            trySpawnBossNearPlayer(player, "desert");
-        }
+    private boolean canSpawnBoss(final String bossType, final Location location) {
+        return switch (bossType) {
+            case "ender" -> canSpawnEnderBoss(location);
+            case "nether" -> canSpawnNetherBoss(location);
+            case "forest" -> canSpawnForestBoss(location);
+            case "desert" -> canSpawnDesertBoss(location);
+            default -> false;
+        };
     }
 
     // Утилиты

@@ -1,6 +1,8 @@
 package com.flyaway.minibosses.boss;
 
 import com.flyaway.minibosses.MiniBosses;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
@@ -12,15 +14,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
 
 import java.util.List;
+import java.util.Objects;
 
 public class EnderLordBoss extends AbstractMiniBoss {
 
+    private static final String BOSS_NAME_COLORED = "§dПовелитель Энда";
+
     public EnderLordBoss(MiniBosses plugin, Location location) {
-        super(plugin, "ender", ChatColor.LIGHT_PURPLE + "Повелитель Энда",
-              (Enderman) location.getWorld().spawnEntity(location, EntityType.ENDERMAN), BarColor.PURPLE);
+        super(plugin, "ender", BOSS_NAME_COLORED,
+                (Enderman) location.getWorld().spawnEntity(location, EntityType.ENDERMAN), BarColor.PURPLE);
         setupBoss();
         setupBossBar();
         startBossBarUpdater();
@@ -28,7 +32,7 @@ public class EnderLordBoss extends AbstractMiniBoss {
     }
 
     public EnderLordBoss(MiniBosses plugin, LivingEntity entity) {
-        super(plugin, "ender", ChatColor.LIGHT_PURPLE + "Повелитель Энда", entity, BarColor.PURPLE);
+        super(plugin, "ender", BOSS_NAME_COLORED, entity, BarColor.PURPLE);
         setupBossBar();
         startBossBarUpdater();
     }
@@ -36,14 +40,20 @@ public class EnderLordBoss extends AbstractMiniBoss {
     private void setupBoss() {
         Enderman enderman = (Enderman) entity;
 
-        enderman.setCustomName(name);
+        Component bossName = Component.text("Повелитель Энда", NamedTextColor.LIGHT_PURPLE);
+        enderman.customName(bossName);
         enderman.setCustomNameVisible(true);
-        enderman.getAttribute(Attribute.MAX_HEALTH).setBaseValue(plugin.getConfigManager().getEnderBossHealth());
-        enderman.setHealth(plugin.getConfigManager().getEnderBossHealth());
-        double attackDamage = enderman.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
-        enderman.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(attackDamage * 2);
-        double moveSpeed = enderman.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue();
-        enderman.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(moveSpeed * 1.2);
+
+        double bossHealth = plugin.getConfigManager().getEnderBossHealth();
+        double attackMultiplier = plugin.getConfigManager().getEnderBossAttackMultiplier();
+        double speedMultiplier = plugin.getConfigManager().getEnderBossSpeedMultiplier();
+
+        Objects.requireNonNull(enderman.getAttribute(Attribute.MAX_HEALTH)).setBaseValue(bossHealth);
+        enderman.setHealth(bossHealth);
+        double attackDamage = Objects.requireNonNull(enderman.getAttribute(Attribute.ATTACK_DAMAGE)).getBaseValue();
+        Objects.requireNonNull(enderman.getAttribute(Attribute.ATTACK_DAMAGE)).setBaseValue(attackDamage * attackMultiplier);
+        double moveSpeed = Objects.requireNonNull(enderman.getAttribute(Attribute.MOVEMENT_SPEED)).getBaseValue();
+        Objects.requireNonNull(enderman.getAttribute(Attribute.MOVEMENT_SPEED)).setBaseValue(moveSpeed * speedMultiplier);
         enderman.setRemoveWhenFarAway(false);
 
         enderman.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1));
@@ -77,9 +87,9 @@ public class EnderLordBoss extends AbstractMiniBoss {
             // Телепортируем босса к случайному игроку
             Player targetPlayer = nearbyPlayers.get(random.nextInt(nearbyPlayers.size()));
             Location teleportLoc = targetPlayer.getLocation().add(
-                random.nextDouble() * 4 - 2,
-                0,
-                random.nextDouble() * 4 - 2
+                    random.nextDouble() * 4 - 2,
+                    0,
+                    random.nextDouble() * 4 - 2
             );
 
             if (entity instanceof Enderman) {
@@ -91,11 +101,16 @@ public class EnderLordBoss extends AbstractMiniBoss {
             // Ослепляем всех игроков в радиусе
             for (Player player : nearbyPlayers) {
                 player.addPotionEffect(new PotionEffect(
-                    PotionEffectType.BLINDNESS,
-                    plugin.getConfigManager().getEnderBlindnessDuration(),
-                    1
+                        PotionEffectType.BLINDNESS,
+                        plugin.getConfigManager().getEnderBlindnessDuration(),
+                        1
                 ));
                 world.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+
+                if (plugin.getConfigManager().isShowAbilityMessage()) {
+                    Component message = Component.text("Повелитель Энда ослепил вас!", NamedTextColor.LIGHT_PURPLE);
+                    player.sendMessage(message);
+                }
             }
 
             world.spawnParticle(Particle.REVERSE_PORTAL, loc, 30, 2, 2, 2, 0.1);
@@ -111,20 +126,24 @@ public class EnderLordBoss extends AbstractMiniBoss {
         for (Player player : getNearbyPlayers(plugin.getConfigManager().getEnderTeleportRadius())) {
             // Телепортируем игрока к боссу с небольшим случайным смещением
             Location teleportLoc = loc.clone().add(
-                random.nextDouble() * 4 - 2,
-                1,
-                random.nextDouble() * 4 - 2
+                    random.nextDouble() * 4 - 2,
+                    1,
+                    random.nextDouble() * 4 - 2
             );
 
             // Проверяем безопасное место для телепортации
             if (teleportLoc.getBlock().getType().isAir() &&
-                teleportLoc.clone().add(0, 1, 0).getBlock().getType().isAir()) {
+                    teleportLoc.clone().add(0, 1, 0).getBlock().getType().isAir()) {
 
                 player.teleport(teleportLoc);
                 player.addPotionEffect(new PotionEffect(
-                    PotionEffectType.SLOWNESS, 40, 1
+                        PotionEffectType.SLOWNESS, 40, 1
                 ));
-//                 player.sendMessage(ChatColor.LIGHT_PURPLE + "Повелитель Энда притягивает вас к себе!");
+
+                if (plugin.getConfigManager().isShowAbilityMessage()) {
+                 Component message = Component.text("Повелитель Энда притягивает вас к себе!", NamedTextColor.LIGHT_PURPLE);
+                 player.sendMessage(message);
+                 }
             }
         }
         world.spawnParticle(Particle.REVERSE_PORTAL, loc, 50, 3, 2, 3, 0.2);
@@ -137,14 +156,21 @@ public class EnderLordBoss extends AbstractMiniBoss {
 
         for (int i = 0; i < plugin.getConfigManager().getEnderHelperCount(); i++) {
             Location spawnLoc = loc.clone().add(
-                random.nextDouble() * 4 - 2,
-                0,
-                random.nextDouble() * 4 - 2
+                    random.nextDouble() * 4 - 2,
+                    0,
+                    random.nextDouble() * 4 - 2
             );
 
             Endermite endermite = (Endermite) world.spawnEntity(spawnLoc, EntityType.ENDERMITE);
-            endermite.setCustomName(ChatColor.LIGHT_PURPLE + "Слуга Энда");
-            endermite.getAttribute(Attribute.MAX_HEALTH).setBaseValue(plugin.getConfigManager().getEnderHelperHealth());
+
+            Component helperName = Component.text("Слуга Энда", NamedTextColor.LIGHT_PURPLE);
+            endermite.customName(helperName);
+            endermite.setCustomNameVisible(true);
+
+            Objects.requireNonNull(endermite.getAttribute(Attribute.MAX_HEALTH)).setBaseValue(plugin.getConfigManager().getEnderHelperHealth());
+            double attackDamage = Objects.requireNonNull(endermite.getAttribute(Attribute.ATTACK_DAMAGE)).getBaseValue();
+            double attackMultiplier = plugin.getConfigManager().getEnderHelperAttackMultiplier();
+            Objects.requireNonNull(endermite.getAttribute(Attribute.ATTACK_DAMAGE)).setBaseValue(attackDamage * attackMultiplier);
             endermite.setHealth(plugin.getConfigManager().getEnderHelperHealth());
 
             Player target = findNearestPlayer();

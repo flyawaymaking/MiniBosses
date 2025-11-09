@@ -1,6 +1,8 @@
 package com.flyaway.minibosses.boss;
 
 import com.flyaway.minibosses.MiniBosses;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
@@ -14,13 +16,15 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.List;
+import java.util.Objects;
 
 public class DesertSandlordBoss extends AbstractMiniBoss {
 
+    private static final String BOSS_NAME_COLORED = "§6Повелитель Песков";
+
     public DesertSandlordBoss(MiniBosses plugin, Location location) {
-        super(plugin, "desert", ChatColor.GOLD + "Повелитель Песков",
-              (Husk) location.getWorld().spawnEntity(location, EntityType.HUSK), BarColor.YELLOW);
+        super(plugin, "desert", BOSS_NAME_COLORED,
+                (Husk) location.getWorld().spawnEntity(location, EntityType.HUSK), BarColor.YELLOW);
         setupBoss();
         setupBossBar();
         startBossBarUpdater();
@@ -28,7 +32,7 @@ public class DesertSandlordBoss extends AbstractMiniBoss {
     }
 
     public DesertSandlordBoss(MiniBosses plugin, LivingEntity entity) {
-        super(plugin, "desert", ChatColor.GOLD + "Повелитель Песков", entity, BarColor.YELLOW);
+        super(plugin, "desert", BOSS_NAME_COLORED, entity, BarColor.YELLOW); // Используем цветную строку для боссбара
         setupBossBar();
         startBossBarUpdater();
     }
@@ -36,14 +40,20 @@ public class DesertSandlordBoss extends AbstractMiniBoss {
     private void setupBoss() {
         Husk husk = (Husk) entity;
 
-        husk.setCustomName(name);
+        Component bossName = Component.text("Повелитель Песков", NamedTextColor.GOLD);
+        husk.customName(bossName);
         husk.setCustomNameVisible(true);
-        husk.getAttribute(Attribute.MAX_HEALTH).setBaseValue(plugin.getConfigManager().getDesertBossHealth());
-        husk.setHealth(plugin.getConfigManager().getDesertBossHealth());
-        double attackDamage = husk.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
-        husk.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(attackDamage * 2);
-        double moveSpeed = husk.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue();
-        husk.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(moveSpeed * 1.1);
+
+        double bossHealth = plugin.getConfigManager().getDesertBossHealth();
+        double attackMultiplier = plugin.getConfigManager().getDesertBossAttackMultiplier();
+        double speedMultiplier = plugin.getConfigManager().getDesertBossSpeedMultiplier();
+
+        Objects.requireNonNull(husk.getAttribute(Attribute.MAX_HEALTH)).setBaseValue(bossHealth);
+        husk.setHealth(bossHealth);
+        double attackDamage = Objects.requireNonNull(husk.getAttribute(Attribute.ATTACK_DAMAGE)).getBaseValue();
+        Objects.requireNonNull(husk.getAttribute(Attribute.ATTACK_DAMAGE)).setBaseValue(attackDamage * attackMultiplier);
+        double moveSpeed = Objects.requireNonNull(husk.getAttribute(Attribute.MOVEMENT_SPEED)).getBaseValue();
+        Objects.requireNonNull(husk.getAttribute(Attribute.MOVEMENT_SPEED)).setBaseValue(moveSpeed * speedMultiplier);
         husk.setRemoveWhenFarAway(false);
 
         husk.getEquipment().setHelmet(new ItemStack(Material.GOLDEN_HELMET));
@@ -97,7 +107,10 @@ public class DesertSandlordBoss extends AbstractMiniBoss {
             Vector direction = player.getLocation().toVector().subtract(loc.toVector()).normalize();
             player.setVelocity(direction.multiply(1.0));
 
-//             player.sendMessage(ChatColor.YELLOW + "Повелитель Песков поднимает песчаную бурю!");
+            if (plugin.getConfigManager().isShowAbilityMessage()) {
+                Component message = Component.text("Повелитель Песков поднимает песчаную бурю!", NamedTextColor.YELLOW);
+                player.sendMessage(message);
+            }
         }
     }
 
@@ -113,23 +126,25 @@ public class DesertSandlordBoss extends AbstractMiniBoss {
 
             // Спавним стрелу с нужным направлением
             Arrow arrow = world.spawnArrow(
-                loc.add(0, 1.5, 0), // немного выше центра босса, чтобы стрела не шла из ног
-                direction,
-                1.6f, // скорость
-                0.0f  // разброс (0 = точное попадание)
+                    loc.add(0, 1.5, 0), // немного выше центра босса, чтобы стрела не шла из ног
+                    direction,
+                    1.6f, // скорость
+                    0.0f  // разброс (0 = точное попадание)
             );
 
             arrow.setShooter(entity);
             arrow.setDamage(plugin.getConfigManager().getDesertArrowDamage());
 
             arrow.addCustomEffect(new PotionEffect(
-                PotionEffectType.SLOWNESS,
-                plugin.getConfigManager().getDesertArrowSlownessDuration(),
-                plugin.getConfigManager().getDesertArrowSlownessLevel()
+                    PotionEffectType.SLOWNESS,
+                    plugin.getConfigManager().getDesertArrowSlownessDuration(),
+                    plugin.getConfigManager().getDesertArrowSlownessLevel()
             ), true);
 
-            // Можно включить зажжение для эффектности:
-            // arrow.setFireTicks(40);
+            if (plugin.getConfigManager().isShowAbilityMessage()) {
+                Component message = Component.text("Повелитель Песков запускает в вас стрелу!", NamedTextColor.YELLOW);
+                player.sendMessage(message);
+            }
         }
     }
 
@@ -140,14 +155,21 @@ public class DesertSandlordBoss extends AbstractMiniBoss {
 
         for (int i = 0; i < plugin.getConfigManager().getDesertHelperCount(); i++) {
             Location spawnLoc = loc.clone().add(
-                random.nextDouble() * 5 - 2.5,
-                0,
-                random.nextDouble() * 5 - 2.5
+                    random.nextDouble() * 5 - 2.5,
+                    0,
+                    random.nextDouble() * 5 - 2.5
             );
             Husk husk = (Husk) world.spawnEntity(spawnLoc, EntityType.HUSK);
-            husk.setCustomName(ChatColor.YELLOW + "Песчаный Воин");
-            husk.getAttribute(Attribute.MAX_HEALTH).setBaseValue(plugin.getConfigManager().getDesertHelperHealth());
+
+            Component helperName = Component.text("Песчаный Воин", NamedTextColor.YELLOW);
+            husk.customName(helperName);
+            husk.setCustomNameVisible(true);
+
+            Objects.requireNonNull(husk.getAttribute(Attribute.MAX_HEALTH)).setBaseValue(plugin.getConfigManager().getDesertHelperHealth());
             husk.setHealth(plugin.getConfigManager().getDesertHelperHealth());
+            double attackDamage = Objects.requireNonNull(husk.getAttribute(Attribute.ATTACK_DAMAGE)).getBaseValue();
+            double attackMultiplier = plugin.getConfigManager().getDesertHelperAttackMultiplier();
+            Objects.requireNonNull(husk.getAttribute(Attribute.ATTACK_DAMAGE)).setBaseValue(attackDamage * attackMultiplier);
             husk.getEquipment().setItemInMainHand(new ItemStack(Material.IRON_SHOVEL));
 
             Player target = findNearestPlayer();

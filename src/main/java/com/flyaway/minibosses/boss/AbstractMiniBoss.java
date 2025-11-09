@@ -2,22 +2,17 @@ package com.flyaway.minibosses.boss;
 
 import com.flyaway.minibosses.MiniBosses;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractMiniBoss implements MiniBoss {
@@ -61,13 +56,13 @@ public abstract class AbstractMiniBoss implements MiniBoss {
 
     @Override
     public double getHealthPercent() {
-        if (entity == null || entity.isDead() || !entity.isValid()) return 0;
-        return entity.getHealth() / entity.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+        if (isEntityInvalid()) return 0;
+        return entity.getHealth() / Objects.requireNonNull(entity.getAttribute(Attribute.MAX_HEALTH)).getValue();
     }
 
     @Override
     public boolean shouldSummonHelpers(double healthPercent) {
-        if (entity == null || entity.isDead()) return false;
+        if (isEntityInvalid()) return false;
 
         int currentWave = getHelperWave(); // Всегда читаем из PDC
 
@@ -104,12 +99,9 @@ public abstract class AbstractMiniBoss implements MiniBoss {
     }
 
     // Вспомогательный метод для проверки валидности entity
-    protected boolean isEntityValid() {
-        return entity != null && !entity.isDead() && entity.isValid();
+    protected boolean isEntityInvalid() {
+        return entity == null || entity.isDead() || !entity.isValid();
     }
-
-    // === ВЫНЕСЕННЫЕ ПОВТОРЯЮЩИЕСЯ МЕТОДЫ ===
-
     protected void setupBossBar() {
         if (bossBarInitialized) {
             return; // Боссбар уже инициализирован
@@ -145,7 +137,7 @@ public abstract class AbstractMiniBoss implements MiniBoss {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (entity == null || entity.isDead() || !entity.isValid()) {
+                if (isEntityInvalid()) {
                     bossBar.removeAll();
                     cancel();
                     return;
@@ -228,8 +220,7 @@ public abstract class AbstractMiniBoss implements MiniBoss {
     protected void spawnExperienceOrbs(int experience) {
         if (experience > 0) {
             Location loc = entity.getLocation();
-            loc.getWorld().spawn(loc, org.bukkit.entity.ExperienceOrb.class)
-               .setExperience(experience);
+            loc.getWorld().spawn(loc, org.bukkit.entity.ExperienceOrb.class).setExperience(experience);
         }
     }
 
@@ -245,5 +236,6 @@ public abstract class AbstractMiniBoss implements MiniBoss {
         giveRewards();
     }
 
-    public void giveRewards() {}
+    public void giveRewards() {
+    }
 }

@@ -1,6 +1,8 @@
 package com.flyaway.minibosses.boss;
 
 import com.flyaway.minibosses.MiniBosses;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
@@ -9,18 +11,19 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.util.Vector;
 
 import java.util.List;
+import java.util.Objects;
 
 public class NetherInfernoBoss extends AbstractMiniBoss {
 
+    private static final String BOSS_NAME_COLORED = "§cИнфернальный Ифрит";
+
     public NetherInfernoBoss(MiniBosses plugin, Location location) {
-        super(plugin, "nether", ChatColor.RED + "Инфернальный Ифрит",
-              (Blaze) location.getWorld().spawnEntity(location, EntityType.BLAZE), BarColor.RED);
+        super(plugin, "nether", BOSS_NAME_COLORED,
+                (Blaze) location.getWorld().spawnEntity(location, EntityType.BLAZE), BarColor.RED);
         setupBoss();
         setupBossBar();
         startBossBarUpdater();
@@ -28,7 +31,7 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
     }
 
     public NetherInfernoBoss(MiniBosses plugin, LivingEntity entity) {
-        super(plugin, "nether", ChatColor.RED + "Инфернальный Ифрит", entity, BarColor.RED);
+        super(plugin, "nether", BOSS_NAME_COLORED, entity, BarColor.RED);
         setupBossBar();
         startBossBarUpdater();
     }
@@ -36,14 +39,21 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
     private void setupBoss() {
         Blaze blaze = (Blaze) entity;
 
-        blaze.setCustomName(name);
+        // Для имени существа используем Adventure Component
+        Component bossName = Component.text("Инфернальный Ифрит", NamedTextColor.RED);
+        blaze.customName(bossName);
         blaze.setCustomNameVisible(true);
-        blaze.getAttribute(Attribute.MAX_HEALTH).setBaseValue(plugin.getConfigManager().getNetherBossHealth());
-        blaze.setHealth(plugin.getConfigManager().getNetherBossHealth());
-        double attackDamage = blaze.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
-        blaze.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(attackDamage * 2);
-        double moveSpeed = blaze.getAttribute(Attribute.MOVEMENT_SPEED).getBaseValue();
-        blaze.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(moveSpeed * 1.5);
+
+        double bossHealth = plugin.getConfigManager().getNetherBossHealth();
+        double attackMultiplier = plugin.getConfigManager().getNetherBossAttackMultiplier();
+        double speedMultiplier = plugin.getConfigManager().getNetherBossSpeedMultiplier();
+
+        Objects.requireNonNull(blaze.getAttribute(Attribute.MAX_HEALTH)).setBaseValue(bossHealth);
+        blaze.setHealth(bossHealth);
+        double attackDamage = Objects.requireNonNull(blaze.getAttribute(Attribute.ATTACK_DAMAGE)).getBaseValue();
+        Objects.requireNonNull(blaze.getAttribute(Attribute.ATTACK_DAMAGE)).setBaseValue(attackDamage * attackMultiplier);
+        double moveSpeed = Objects.requireNonNull(blaze.getAttribute(Attribute.MOVEMENT_SPEED)).getBaseValue();
+        Objects.requireNonNull(blaze.getAttribute(Attribute.MOVEMENT_SPEED)).setBaseValue(moveSpeed * speedMultiplier);
 
         blaze.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
         blaze.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, Integer.MAX_VALUE, 1));
@@ -79,7 +89,11 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
         for (Player player : getNearbyPlayers(plugin.getConfigManager().getNetherAbilityRadius())) {
             player.setFireTicks(plugin.getConfigManager().getNetherFireDuration());
             player.damage(plugin.getConfigManager().getNetherFireDamage());
-//             player.sendMessage(ChatColor.RED + "Инфернальный Ифрит сжигает вас огненным штормом!");
+
+            if (plugin.getConfigManager().isShowAbilityMessage()) {
+                Component message = Component.text("Инфернальный Ифрит сжигает вас огненным штормом!", NamedTextColor.RED);
+                player.sendMessage(message);
+            }
         }
     }
 
@@ -107,7 +121,7 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
                     public void run() {
                         if (!entity.isValid() || entity.isDead()) return;
 
-                        Vector spread = toTarget.clone().add(randomSpreadVector(0.08)).normalize();
+                        Vector spread = toTarget.clone().add(randomSpreadVector()).normalize();
 
                         SmallFireball extra = (SmallFireball) world.spawnEntity(spawnLoc, EntityType.SMALL_FIREBALL);
                         extra.getPersistentDataContainer().set(plugin.getExtraFireballsKey(), PersistentDataType.BYTE, (byte) 1);
@@ -119,7 +133,8 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
         }
     }
 
-    private Vector randomSpreadVector(double maxOffset) {
+    private Vector randomSpreadVector() {
+        double maxOffset = 0.08;
         double ox = (random.nextDouble() * 2 - 1) * maxOffset;
         double oy = (random.nextDouble() * 2 - 1) * maxOffset;
         double oz = (random.nextDouble() * 2 - 1) * maxOffset;
@@ -168,6 +183,11 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
             right.setVelocity(rightVel);
             right.setYield(plugin.getConfigManager().getNetherFireballPower());
             right.setIsIncendiary(true);
+
+            if (plugin.getConfigManager().isShowAbilityMessage()) {
+                Component message = Component.text("Инфернальный Ифрит выпускает фаерболы!", NamedTextColor.RED);
+                player.sendMessage(message);
+            }
         }
     }
 
@@ -182,7 +202,7 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
             Player targetPlayer = nearbyPlayers.get(random.nextInt(nearbyPlayers.size()));
             Location targetLoc = targetPlayer.getLocation();
 
-            Location teleportLoc = findSafeTeleportLocation(targetLoc, 10);
+            Location teleportLoc = findSafeTeleportLocation(targetLoc);
             if (teleportLoc != null) {
                 entity.teleport(teleportLoc);
 
@@ -190,14 +210,18 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
                 world.spawnParticle(Particle.FLAME, teleportLoc, 30, 2, 2, 2, 0.2);
                 world.spawnParticle(Particle.LARGE_SMOKE, teleportLoc, 15, 1, 1, 1, 0.1);
 
-//                 targetPlayer.sendMessage(ChatColor.RED + "Инфернальный Ифрит телепортируется к вам!");
+                if (plugin.getConfigManager().isShowAbilityMessage()) {
+                    Component message = Component.text("Инфернальный Ифрит телепортируется к вам!", NamedTextColor.RED);
+                    targetPlayer.sendMessage(message);
+                }
                 targetPlayer.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 1));
             }
         }
     }
 
-    protected Location findSafeTeleportLocation(Location center, int radius) {
+    protected Location findSafeTeleportLocation(Location center) {
         World world = center.getWorld();
+        int radius = 10;
 
         for (int i = 0; i < 15; i++) {
             int x = center.getBlockX() + random.nextInt(radius * 2) - radius;
@@ -215,7 +239,7 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
 
             // Проверяем пространство вокруг
             if (testLoc.clone().add(0, 1, 0).getBlock().isPassable() &&
-                testLoc.clone().add(0, 2, 0).getBlock().isPassable()) {
+                    testLoc.clone().add(0, 2, 0).getBlock().isPassable()) {
                 return testLoc;
             }
         }
@@ -230,13 +254,24 @@ public class NetherInfernoBoss extends AbstractMiniBoss {
 
         for (int i = 0; i < plugin.getConfigManager().getNetherHelperCount(); i++) {
             Location spawnLoc = loc.clone().add(
-                random.nextDouble() * 5 - 2.5,
-                0,
-                random.nextDouble() * 5 - 2.5
+                    random.nextDouble() * 5 - 2.5,
+                    0,
+                    random.nextDouble() * 5 - 2.5
             );
             MagmaCube magma = (MagmaCube) world.spawnEntity(spawnLoc, EntityType.MAGMA_CUBE);
+            double maxHp = Objects.requireNonNull(magma.getAttribute(Attribute.MAX_HEALTH)).getBaseValue();
+            double hpMultiplier = plugin.getConfigManager().getNetherHelperHealthMultiplier();
+            Objects.requireNonNull(magma.getAttribute(Attribute.MAX_HEALTH)).setBaseValue(maxHp * hpMultiplier);
+            magma.setHealth(maxHp * 1.5);
+            double attackDamage = Objects.requireNonNull(magma.getAttribute(Attribute.ATTACK_DAMAGE)).getBaseValue();
+            double attackMultiplier = plugin.getConfigManager().getNetherHelperAttackMultiplier();
+            Objects.requireNonNull(magma.getAttribute(Attribute.ATTACK_DAMAGE)).setBaseValue(attackDamage * attackMultiplier);
             magma.setSize(plugin.getConfigManager().getNetherHelperSize());
-            magma.setCustomName(ChatColor.RED + "Расплавленный Слизень");
+
+            // Для помощников используем Adventure Component
+            Component helperName = Component.text("Расплавленный Слизень", NamedTextColor.RED);
+            magma.customName(helperName);
+            magma.setCustomNameVisible(true);
 
             Player target = findNearestPlayer();
             if (target != null) magma.setTarget(target);

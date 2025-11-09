@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class MiniBosses extends JavaPlugin {
     private ConfigManager configManager;
@@ -38,8 +39,8 @@ public class MiniBosses extends JavaPlugin {
 
         // Регистрируем CommandHandler с TabCompleter
         CommandHandler commandHandler = new CommandHandler(this);
-        getCommand("minibosses").setExecutor(commandHandler);
-        getCommand("minibosses").setTabCompleter(commandHandler);
+        Objects.requireNonNull(getCommand("minibosses")).setExecutor(commandHandler);
+        Objects.requireNonNull(getCommand("minibosses")).setTabCompleter(commandHandler);
 
         bossManager.startTasks();
         getLogger().info("MiniBosses включен!");
@@ -56,8 +57,8 @@ public class MiniBosses extends JavaPlugin {
         getBossManager().stopAllTasks();
         getConfigManager().reload();
         getBossManager().startTasks();
-        getPlayerDataManager().setupPlayerData();
-        getEconomyManager().setupEconomy();
+        getPlayerDataManager().reloadPlayerData();
+        getEconomyManager().reload();
         getLogger().info("Конфигурация MiniBosses перезагружена!");
     }
 
@@ -99,10 +100,6 @@ public class MiniBosses extends JavaPlugin {
 
     public Map<String, Long> getBossCooldowns() {
         return bossCooldowns;
-    }
-
-    public NamespacedKey getBossTypeKey() {
-        return bossTypeKey;
     }
 
     public NamespacedKey getExtraFireballsKey() {

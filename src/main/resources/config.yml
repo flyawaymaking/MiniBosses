@@ -3,28 +3,34 @@
 # Автоматический спавн
 auto-spawn:
   enabled: true
-  check-interval: 300  # Интервал проверки в секундах
+  check-interval: 300        # Интервал проверки в секундах
   no-boss-spawn-radius: 100  # Радиус без других боссов
 
 # Настройки покупки боссов
 buy-cooldown: 86400000  # 24 часа в миллисекундах
-buy-currency: money  # Валюта из CoinsEngine для покупки боссов
+buy-currency: money     # Валюта из CoinsEngine для покупки боссов
+
+arrow-reflection-chance: 0.5 # Шанс отражения стрелы в игрока (0.0-1.0)
+show-ability-message: false  # Показывать ли сообщения об использованных способностях
 
 # Босс Энда
 ender-boss:
   enabled: true
-  spawn-chance: 1.0  # Шанс спавна в процентах
-  cooldown: 3600      # Кулдаун в секундах
-  health: 300.0       # Здоровье
-  ability-chance: 0.6 # Шанс использования способности (0.0-1.0)
+  spawn-chance: 1.0      # Шанс спавна в процентах
+  cooldown: 3600         # Кулдаун в секундах
+  health: 300.0          # Здоровье
+  attack-multiplier: 3.0 # Множитель урона
+  speed-multiplier: 1.2  # Множитель скорости
+  ability-chance: 0.6    # Шанс использования способности (0.0-1.0)
 
   # Покупка
   buy-enabled: true
   buy-price: 25000
 
   # Помощники
-  helper-count: 10           # Количество эндермитов
-  helper-health: 40.0       # Здоровье эндермитов
+  helper-count: 10               # Количество эндермитов
+  helper-health: 40.0            # Здоровье эндермитов
+  helper-attack-multiplier: 3.0  # Множитель урона эндермитов
 
   # Способности
   ability-radius: 24        # Радиус способности
@@ -48,6 +54,8 @@ nether-boss:
   spawn-chance: 1.0
   cooldown: 3600
   health: 320.0
+  attack-multiplier: 2.7
+  speed-multiplier: 1.5
   ability-chance: 0.8
 
   # Покупка
@@ -55,8 +63,10 @@ nether-boss:
   buy-price: 25000
 
   # Помощники
-  helper-count: 4           # Количество магма-кубов
-  helper-size: 3            # Размер магма-кубов
+  helper-count: 4                # Количество магма-кубов
+  helper-size: 2                 # Размер магма-кубов
+  helper-health-multiplier: 1.5  # Множитель здоровья магма-кубов
+  helper-attack-multiplier: 2.2  # Множитель урона магма-кубов
 
   # Способности
   ability-radius: 24        # Радиус способности
@@ -82,6 +92,8 @@ forest-boss:
   spawn-chance: 1.0
   cooldown: 3600
   health: 400.0
+  attack-multiplier: 2.5
+  speed-multiplier: 1.15
   ability-chance: 0.6
 
   # Покупка
@@ -89,8 +101,9 @@ forest-boss:
   buy-price: 40000
 
   # Помощники
-  helper-count: 6           # Количество волков
-  helper-health: 30.0       # Здоровье волков
+  helper-count: 6                # Количество волков
+  helper-health: 30.0            # Здоровье волков
+  helper-attack-multiplier: 2.2  # Множитель урона волков
 
   # Способности
   ability-radius: 24        # Радиус способности
@@ -118,6 +131,8 @@ desert-boss:
   spawn-chance: 1.0
   cooldown: 3600
   health: 320.0
+  attack-multiplier: 2.5
+  speed-multiplier: 1.1
   ability-chance: 0.6
 
   # Покупка
@@ -125,8 +140,9 @@ desert-boss:
   buy-price: 25000
 
   # Помощники
-  helper-count: 5           # Количество хасков
-  helper-health: 35.0       # Здоровье хасков
+  helper-count: 5                # Количество хасков
+  helper-health: 35.0            # Здоровье хасков
+  helper-attack-multiplier: 2.2  # Множитель урона хасков
 
   # Способности
   ability-radius: 24        # Радиус способности

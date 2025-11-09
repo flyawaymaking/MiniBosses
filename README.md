@@ -66,21 +66,25 @@ MiniBosses — плагин для Minecraft 1.21.8 (Paper), который до
 # Автоматический спавн
 auto-spawn:
   enabled: true
-  check-interval: 300  # Интервал проверки в секундах
+  check-interval: 300        # Интервал проверки в секундах
   no-boss-spawn-radius: 100  # Радиус без других боссов
 
 # Настройки покупки боссов
 buy-cooldown: 86400000  # 24 часа в миллисекундах
-buy-currency: coins  # Валюта из CoinsEngine для покупки боссов
+buy-currency: money     # Валюта из CoinsEngine для покупки боссов
+
+arrow-reflection-chance: 0.5 # Шанс отражения стрелы в игрока (0.0-1.0)
+show-ability-message: false  # Показывать ли сообщения об использованных способностях
 
 # Босс Энда
 ender-boss:
   enabled: true
-  spawn-chance: 15.0  # Шанс спавна в процентах
-  cooldown: 3600      # Кулдаун в секундах
-  health: 300.0       # Здоровье
-  ability-chance: 0.3 # Шанс использования способности
-  helper-count: 4     # Количество помощников
+  spawn-chance: 1.0      # Шанс спавна в процентах
+  cooldown: 3600         # Кулдаун в секундах
+  health: 300.0          # Здоровье
+  attack-multiplier: 3.0 # Множитель урона
+  speed-multiplier: 1.2  # Множитель скорости
+  ability-chance: 0.6    # Шанс использования способности (0.0-1.0)
 
   # Покупка
   buy-enabled: true
